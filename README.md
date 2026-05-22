@@ -1,6 +1,7 @@
 # SMS Tracker
 
-Student Management & Assessment Delivery Engine built with the Next.js App Router, Prisma ORM, and PostgreSQL.
+Student Management & Assessment Delivery Engine built with the Next.js App Router, Prisma ORM, and
+PostgreSQL.
 
 ---
 
@@ -15,7 +16,8 @@ SMS Tracker is a performance-focused academic tracking platform designed to mana
 - Live dashboard updates
 - Server-side data workflows
 
-The system uses modern Next.js architecture with Server Components, Server Actions, Prisma ORM, and PostgreSQL.
+The system uses modern Next.js architecture with Server Components, Server Actions, Prisma ORM, and
+PostgreSQL.
 
 ---
 
@@ -147,7 +149,8 @@ flowchart TD
 
     M --> N["/public/uploads"]
 
-    M --> O[revalidatePath()]
+    M --> O["revalidatePath"]
+
     O --> P[Cache Revalidation]
 ```
 
@@ -196,7 +199,8 @@ sequenceDiagram
 
 ### Problem
 
-After moving folders inside the `app/` directory, Next.js may still reference stale route bundles and throw 404 or missing file errors.
+After moving folders inside the `app/` directory, Next.js may still reference stale route bundles
+and throw 404 or missing file errors.
 
 ### Solution
 
@@ -216,7 +220,7 @@ npm run dev
 Server Actions update the database correctly, but UI counters such as:
 
 ```ts
-student.submissions.length
+student.submissions.length;
 ```
 
 do not update immediately.
@@ -248,20 +252,14 @@ Mapped arrays may accidentally pass incorrect IDs during uploads or mutations.
 ### Bad Example
 
 ```tsx
-openAssessments.map((assessment, index) => (
-  <UploadButton key={index} />
-));
+openAssessments.map((assessment, index) => <UploadButton key={index} />);
 ```
 
 ### Correct Example
 
 ```tsx
 openAssessments.map((assessment) => (
-  <UploadButton
-    key={assessment.id}
-    assessmentId={assessment.id}
-    studentId={student.id}
-  />
+	<UploadButton key={assessment.id} assessmentId={assessment.id} studentId={student.id} />
 ));
 ```
 
