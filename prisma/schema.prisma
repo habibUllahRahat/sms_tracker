@@ -1,0 +1,99 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Programme {
+  id        String    @id @default(cuid())
+  name      String
+  feeAmount Decimal
+  students  Student[]
+}
+
+model Student {
+  id           String           @id @default(cuid())
+  studentCode  String           @unique // SMS-2025-0001
+  name         String
+  email        String           @unique
+  dob          DateTime
+  academicYear String
+  status       EnrollmentStatus @default(ENROLLED)
+  programmeId  String
+  programme    Programme        @relation(fields: [programmeId], references: [id])
+  payments     Payment[]
+  submissions  Submission[]
+  grades       Grade[]
+  createdAt    DateTime         @default(now())
+}
+
+enum EnrollmentStatus {
+  ENROLLED
+  DEFERRED
+  WITHDRAWN
+  COMPLETED
+}
+
+model Payment {
+  id        String   @id @default(cuid())
+  amount    Decimal
+  date      DateTime
+  reference String
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model Assessment {
+  id          String       @id @default(cuid())
+  title       String
+  module      String
+  deadline    DateTime
+  submissions Submission[]
+  grades      Grade[]
+  createdAt   DateTime     @default(now())
+}
+
+model Submission {
+  id           String     @id @default(cuid())
+  fileUrl      String
+  fileName     String
+  isLate       Boolean    @default(false)
+  submittedAt  DateTime   @default(now())
+  studentId    String
+  assessmentId String
+  student      Student    @relation(fields: [studentId], references: [id])
+  assessment   Assessment @relation(fields: [assessmentId], references: [id])
+
+  @@unique([studentId, assessmentId])
+}
+
+model Grade {
+  id             String         @id @default(cuid())
+  score          Int
+  classification Classification
+  published      Boolean        @default(false)
+  studentId      String
+  assessmentId   String
+  student        Student        @relation(fields: [studentId], references: [id])
+  assessment     Assessment     @relation(fields: [assessmentId], references: [id])
+
+  @@unique([studentId, assessmentId])
+}
+
+enum Classification {
+  FAIL
+  PASS
+  MERIT
+  DISTINCTION
+}
