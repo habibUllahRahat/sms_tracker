@@ -1,98 +1,316 @@
-# SMS Tracker — Student Management & Assessment Delivery Engine
+# SMS Tracker
 
-A performance-focused academic tracking system built with the Next.js App Router, Prisma ORM, and PostgreSQL. The application manages student enrollment tracking, course milestones, module grade management, and live asset submission pipelines.
+Student Management & Assessment Delivery Engine built with the Next.js App Router, Prisma ORM, and PostgreSQL.
 
-This project was bootstrapped using create-next-app (https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+---
+
+## Overview
+
+SMS Tracker is a performance-focused academic tracking platform designed to manage:
+
+- Student enrollment tracking
+- Course milestone monitoring
+- Assessment and module grading
+- File and asset submissions
+- Live dashboard updates
+- Server-side data workflows
+
+The system uses modern Next.js architecture with Server Components, Server Actions, Prisma ORM, and PostgreSQL.
+
+---
+
+## Tech Stack
+
+- **Framework:** Next.js (App Router)
+- **Language:** TypeScript
+- **Database:** PostgreSQL
+- **ORM:** Prisma
+- **Styling:** Tailwind CSS
+- **UI Components:** Radix UI
+- **Icons:** Tabler Icons
+- **Runtime:** Node.js
 
 ---
 
 ## Getting Started
 
-### 1. Run the Development Server
+### 1. Clone the Repository
 
-Execute one of the following commands in your terminal to start up the local development runtime:
+```bash
+git clone <your-repository-url>
+cd sms-tracker
+```
 
+### 2. Install Dependencies
+
+```bash
+npm install
+```
+
+Or use:
+
+```bash
+yarn install
+# or
+pnpm install
+# or
+bun install
+```
+
+### 3. Configure Environment Variables
+
+Create a `.env` file in the root directory:
+
+```env
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE"
+```
+
+---
+
+## Prisma Setup
+
+### Generate Prisma Client
+
+```bash
+npx prisma generate
+```
+
+### Run Database Migrations
+
+```bash
+npx prisma migrate dev
+```
+
+### Open Prisma Studio
+
+```bash
+npx prisma studio
+```
+
+---
+
+## Run the Development Server
+
+```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```
 
-Open http://localhost:3000 with your browser to see the result.
+Then open:
 
-You can start editing the page by modifying app/page.tsx. The page auto-updates as you edit the file.
-
-This project uses next/font (https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load Geist, a modern font family optimized for web and UI tracking layouts.
+```txt
+http://localhost:3000
+```
 
 ---
 
-## System Architecture & Data Flow
+## Project Structure
 
-Below is the execution flow detailing how a dynamic parameter maps to a clean Prisma query, alongside server mutation validation safeguards:
-
-[Browser Client Viewport]
-           │
-           ▼ (Dynamic Route Input: /student/[id]/assessments)
-[Next.js Server Component Layer]
-           │
-           ├─► [Params Validation Layer] ──► Trims, cleans, and casts incoming ID strings
-           │                                           │
-           ├─► [Prisma Client Query Engine] ◄──────────┘
-           │         │
-           │         ▼ Fetches Student + Submissions + Programme Relational Trees
-           └─► [PostgreSQL Database Storage]
-                     │
-                     ▼ Mutations & File Storage executed via Server Actions
-      [File System: /public/uploads] ◄─── [revalidatePath Engine] forces instant cache eviction
+```txt
+app/
+├── student/
+│   └── [id]/
+│       └── assessments/
+├── actions/
+├── components/
+├── generated/
+│   └── prisma/
+├── lib/
+├── public/
+│   └── uploads/
+└── page.tsx
+```
 
 ---
 
-## AI Debugging Protocols: Fixing Core Architectural Issues
+# System Architecture & Data Flow
 
-When collaborating with an AI assistant to patch runtime errors or synchronization anomalies, use these precise context blueprints to fix the three most common Next.js/Prisma state issues immediately.
+```mermaid
+flowchart TD
+    A[Browser Client] --> B[Dynamic Route Input]
+    B --> C["/student/[id]/assessments"]
 
-### 1. The Route Segment Path Mismatch (404 / Missing Files)
-* The Problem: Moving or restructuring directory routes inside the app/ folder using a shell terminal leaves Next.js background compilation layers looking for stale layout paths, causing active requests to drop with 404 tracking codes.
-* AI Prompt Context Blueprint:
-  > "I just restructured my dynamic folders from app/old-route to app/student/[id]/new-route using the terminal. The editor is throwing file-not-found errors on the old path matching **/*.tsx. Provide the exact terminal sequence to flush the bundler compilation cache and restart the internal TypeScript language server framework."
+    C --> D[Next.js Server Component]
 
-### 2. Stale Relational Counters (UI Count Not Updating)
-* The Problem: Mutating data with a Server Action saves records to the database perfectly, but parent server layouts do not increment arrays (e.g., student.submissions.length) due to Next.js aggressively caching the dynamic path wrapper.
-* AI Prompt Context Blueprint:
-  > "My Prisma action successfully upserts an asset record to the database table, but my server dashboard element keeps displaying the stale array length count until I force a browser window refresh. Write the cache revalidation strategy using revalidatePath and page-level dynamic export overrides to force fresh data reads on every request layout render."
+    D --> E[Params Validation Layer]
+    E --> F[Cleans Student IDs]
 
-### 3. Loop Iteration Context Drifts (Writing to the Wrong Row ID)
-* The Problem: In mapped arrays (openAssessments.map), passing ambient context pointers or indexing variables causes frontend upload scripts to send a completely different student's database identifier key to the server action layer.
-* AI Prompt Context Blueprint:
-  > "My multi-tenant assessment mapping loop is executing file uploads successfully, but the foreign key relation is saving against a completely different student record row. Refactor my dynamic page map component to bind strict database UUID values directly to the client prop interface wrapper to ensure isolation."
+    D --> G[Prisma Query Engine]
 
----
+    G --> H[Students]
+    G --> I[Assessments]
+    G --> J[Submissions]
+    G --> K[Programme Relations]
 
-## Learn More
+    G --> L[(PostgreSQL Database)]
 
-To learn more about Next.js, take a look at the following resources:
+    L --> M[Server Actions & Mutations]
 
-- Next.js Documentation (https://nextjs.org/docs) - learn about Next.js features and API.
-- Learn Next.js (https://nextjs.org/learn) - an interactive Next.js tutorial.
+    M --> N["/public/uploads"]
 
-You can check out the Next.js GitHub repository (https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
----
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the Vercel Platform (https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our Next.js deployment documentation (https://docs.nestjs.com/) for more details.
+    M --> O[revalidatePath()]
+    O --> P[Cache Revalidation]
+```
 
 ---
 
-## Tech Stack & Configurations
+# File Upload Pipeline
 
-* Framework: Next.js (App Router, Server Actions)
-* Database Tooling: Prisma ORM with custom generated paths (app/generated/prisma)
-* Database: PostgreSQL
-* Styling: TailwindCSS with Radix UI primitives & Tabler Icons
-* Runtime: Node.js environment
+```mermaid
+flowchart LR
+    A[Client Upload]
+        --> B[Server Action]
+        --> C[Validation]
+        --> D[Filesystem Storage]
+        --> E[Database Record Creation]
+        --> F[revalidatePath]
+        --> G[Fresh UI Update]
+```
+
+---
+
+# Student Assessment Workflow
+
+```mermaid
+sequenceDiagram
+    participant Student
+    participant Client
+    participant Server
+    participant Prisma
+    participant DB
+
+    Student->>Client: Upload Assessment
+    Client->>Server: Submit FormData
+    Server->>Prisma: Create Submission Record
+    Prisma->>DB: Insert Data
+    DB-->>Prisma: Success
+    Prisma-->>Server: Updated Result
+    Server->>Server: revalidatePath()
+    Server-->>Client: Updated Dashboard
+```
+
+---
+
+# Common Next.js + Prisma Issues
+
+## 1. Route Segment Path Mismatch
+
+### Problem
+
+After moving folders inside the `app/` directory, Next.js may still reference stale route bundles and throw 404 or missing file errors.
+
+### Solution
+
+Clear the cache and restart the TypeScript server:
+
+```bash
+rm -rf .next
+npm run dev
+```
+
+---
+
+## 2. Stale Relational Counters
+
+### Problem
+
+Server Actions update the database correctly, but UI counters such as:
+
+```ts
+student.submissions.length
+```
+
+do not update immediately.
+
+### Solution
+
+Use `revalidatePath()` after mutations:
+
+```ts
+import { revalidatePath } from "next/cache";
+
+revalidatePath(`/student/${studentId}/assessments`);
+```
+
+Optional:
+
+```ts
+export const dynamic = "force-dynamic";
+```
+
+---
+
+## 3. Wrong Foreign Key Bindings
+
+### Problem
+
+Mapped arrays may accidentally pass incorrect IDs during uploads or mutations.
+
+### Bad Example
+
+```tsx
+openAssessments.map((assessment, index) => (
+  <UploadButton key={index} />
+));
+```
+
+### Correct Example
+
+```tsx
+openAssessments.map((assessment) => (
+  <UploadButton
+    key={assessment.id}
+    assessmentId={assessment.id}
+    studentId={student.id}
+  />
+));
+```
+
+Always bind real database UUIDs directly.
+
+---
+
+# Deployment
+
+## Build Production App
+
+```bash
+npm run build
+```
+
+## Start Production Server
+
+```bash
+npm run start
+```
+
+---
+
+# Environment Requirements
+
+- Node.js 18+
+- PostgreSQL database
+- Prisma configured correctly
+- Writable uploads directory
+
+---
+
+# Learn More
+
+## Next.js
+
+- https://nextjs.org/docs
+- https://nextjs.org/learn
+
+## Prisma
+
+- https://www.prisma.io/docs
+
+## PostgreSQL
+
+- https://www.postgresql.org/docs/
+
+---
+
+# License
+
+This project is intended for academic and internal educational management workflows.
