@@ -1,358 +1,222 @@
 # SMS Tracker
 
-Student Management & Assessment Delivery Engine built with the Next.js App Router, Prisma ORM, and
-PostgreSQL.
+**Student Management System** — built for Planet Education Network as an assessment submission.
 
----
-
-## Overview
-
-SMS Tracker is a performance-focused academic tracking platform designed to manage:
-
-- Student enrollment tracking
-- Course milestone monitoring
-- Assessment and module grading
-- File and asset submissions
-- Live dashboard updates
-- Server-side data workflows
-
-The system uses modern Next.js architecture with Server Components, Server Actions, Prisma ORM, and
-PostgreSQL.
+An academic tracking platform that manages student enrollment, course milestones, assessment
+grading, and file submissions using the Next.js App Router, Prisma ORM, and PostgreSQL.
 
 ---
 
 ## Tech Stack
 
-- **Framework:** Next.js (App Router)
-- **Language:** TypeScript
-- **Database:** PostgreSQL
-- **ORM:** Prisma
-- **Styling:** Tailwind CSS
-- **UI Components:** Radix UI
-- **Icons:** Tabler Icons
-- **Runtime:** Node.js
+| Layer         | Technology                                   |
+| ------------- | -------------------------------------------- |
+| Framework     | Next.js 15 (App Router, Turbopack)           |
+| Language      | TypeScript                                   |
+| Database      | PostgreSQL                                   |
+| ORM           | Prisma 6                                     |
+| Styling       | Tailwind CSS v4                              |
+| UI Components | shadcn/ui (radix-nova style) + Aceternity UI |
+| Icons         | Tabler Icons + Lucide React                  |
+| Animation     | Motion (Framer Motion v12)                   |
+| Runtime       | Node.js 18+                                  |
 
 ---
 
-## Getting Started
+## Features
 
-### 1. Clone the Repository
-
-```bash
-git clone <your-repository-url>
-cd sms-tracker
-```
-
-### 2. Install Dependencies
-
-```bash
-npm install
-```
-
-Or use:
-
-```bash
-yarn install
-# or
-pnpm install
-# or
-bun install
-```
-
-### 3. Configure Environment Variables
-
-Create a `.env` file in the root directory:
-
-```env
-DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE"
-```
-
----
-
-## Prisma Setup
-
-### Generate Prisma Client
-
-```bash
-npx prisma generate
-```
-
-### Run Database Migrations
-
-```bash
-npx prisma migrate dev
-```
-
-### Open Prisma Studio
-
-```bash
-npx prisma studio
-```
-
----
-
-## Run the Development Server
-
-```bash
-npm run dev
-```
-
-Then open:
-
-```txt
-http://localhost:3000
-```
+- Student enrollment and profile tracking
+- Course milestone and module monitoring
+- Assessment and submission management
+- File upload pipeline with server-side validation
+- Live dashboard with automatic cache revalidation
+- Route-based navigation via middleware (staff and student views)
 
 ---
 
 ## Project Structure
 
-```txt
-app/
-├── student/
-│   └── [id]/
-│       └── assessments/
-├── actions/
+```
+sms_tracker/
+├── app/
+│   ├── student/
+│   │   └── [id]/
+│   │       └── assessments/
+│   ├── staff/
+│   ├── actions/          # Server Actions (mutations + revalidation)
+│   ├── api/              # API routes (e.g. /api/students)
+│   └── page.tsx
 ├── components/
-├── generated/
-│   └── prisma/
+│   └── ui/               # shadcn/ui component library
 ├── lib/
+│   └── utils.ts
+├── prisma/
+│   ├── schema.prisma
+│   └── seed.ts
 ├── public/
-│   └── uploads/
-└── page.tsx
+│   └── uploads/          # Local file storage
+└── middleware.ts          # Route redirect logic
 ```
 
 ---
 
-# System Architecture & Data Flow
+## System Architecture
 
 ```mermaid
 flowchart TD
-    A[Browser Client] --> B[Dynamic Route Input]
-    B --> C["/student/[id]/assessments"]
+    A[Browser] --> B[middleware.ts]
+    B -->|root to staff| C[Staff Dashboard]
+    B -->|student to student-id| D[Student View]
 
-    C --> D[Next.js Server Component]
+    C --> E[Next.js Server Component]
+    D --> E
 
-    D --> E[Params Validation Layer]
-    E --> F[Cleans Student IDs]
+    E --> F[Prisma Query Engine]
 
-    D --> G[Prisma Query Engine]
+    F --> G[(PostgreSQL)]
 
-    G --> H[Students]
-    G --> I[Assessments]
-    G --> J[Submissions]
-    G --> K[Programme Relations]
-
-    G --> L[(PostgreSQL Database)]
-
-    L --> M[Server Actions & Mutations]
-
-    M --> N["/public/uploads"]
-
-    M --> O["revalidatePath"]
-
-    O --> P[Cache Revalidation]
+    G --> H[Server Actions]
+    H --> I[public uploads folder]
+    H --> J[revalidatePath]
+    J --> K[Cache Cleared - Fresh UI]
 ```
 
 ---
 
-# File Upload Pipeline
+## File Upload Pipeline
 
 ```mermaid
 flowchart LR
-    A[Client Upload]
-        --> B[Server Action]
-        --> C[Validation]
-        --> D[Filesystem Storage]
-        --> E[Database Record Creation]
-        --> F[revalidatePath]
-        --> G[Fresh UI Update]
+    A[Client selects file] --> B[Server Action triggered]
+    B --> C[File validation]
+    C --> D[Save to public uploads]
+    D --> E[Create DB record via Prisma]
+    E --> F[revalidatePath called]
+    F --> G[Dashboard updates instantly]
 ```
 
 ---
 
-# Student Assessment Workflow
+## Assessment Submission Flow
 
 ```mermaid
 sequenceDiagram
     participant Student
     participant Client
-    participant Server
+    participant ServerAction
     participant Prisma
     participant DB
 
-    Student->>Client: Upload Assessment
-    Client->>Server: Submit FormData
-    Server->>Prisma: Create Submission Record
-    Prisma->>DB: Insert Data
-    DB-->>Prisma: Success
-    Prisma-->>Server: Updated Result
-    Server->>Server: revalidatePath()
-    Server-->>Client: Updated Dashboard
+    Student->>Client: Upload file for assessment
+    Client->>ServerAction: Submit FormData with assessmentId and studentId
+    ServerAction->>Prisma: createSubmission(assessmentId, studentId, filePath)
+    Prisma->>DB: INSERT submission record
+    DB-->>Prisma: OK
+    Prisma-->>ServerAction: Submission created
+    ServerAction->>ServerAction: revalidatePath for student assessments page
+    ServerAction-->>Client: Updated dashboard - no manual refresh needed
 ```
 
 ---
 
-# Common Next.js + Prisma Issues
+## Getting Started
 
-## 1. Route Segment Path Mismatch
-
-### Problem
-
-After moving folders inside the `app/` directory, Next.js may still reference stale route bundles
-and throw 404 or missing file errors.
-
-### Solution
-
-Clear the cache and restart the TypeScript server:
+### 1. Clone & Install
 
 ```bash
-rm -rf .next
+git clone https://github.com/habibUllahRahat/sms_tracker.git
+cd sms_tracker
+npm install
+```
+
+### 2. Environment Variables
+
+Create a `.env` file in the root:
+
+```env
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE"
+```
+
+### 3. Prisma Setup
+
+```bash
+npx prisma generate
+npx prisma migrate dev
+npx prisma db seed      # optional: seed initial data
+```
+
+### 4. Run Dev Server
+
+```bash
 npm run dev
 ```
 
----
-
-## 2. Stale Relational Counters
-
-### Problem
-
-Server Actions update the database correctly, but UI counters such as:
-
-```ts
-student.submissions.length;
-```
-
-do not update immediately.
-
-### Solution
-
-Use `revalidatePath()` after mutations:
-
-```ts
-import { revalidatePath } from "next/cache";
-
-revalidatePath(`/student/${studentId}/assessments`);
-```
-
-Optional:
-
-```ts
-export const dynamic = "force-dynamic";
-```
+Open [http://localhost:3000](http://localhost:3000) — you'll be redirected to `/staff`
+automatically.
 
 ---
 
-## 3. Wrong Foreign Key Bindings
+## Middleware Behaviour
 
-### Problem
+`middleware.ts` handles two redirect rules:
 
-Mapped arrays may accidentally pass incorrect IDs during uploads or mutations.
+- `/` → `/staff`
+- `/student` → `/student/<first-student-id>` (fetched from `/api/students`)
 
-### Bad Example
-
-```tsx
-openAssessments.map((assessment, index) => <UploadButton key={index} />);
-```
-
-### Correct Example
-
-```tsx
-openAssessments.map((assessment) => (
-	<UploadButton key={assessment.id} assessmentId={assessment.id} studentId={student.id} />
-));
-```
-
-Always bind real database UUIDs directly.
+There is no authentication layer in the current version.
 
 ---
 
+## AI Usage
+
+This project was built with the assistance of AI tools in the following ways:
+
+### 1. Architecture Decisions & Debugging
+
+Claude (Anthropic) was used to reason through Next.js App Router patterns — specifically around when
+to use Server Components vs Client Components, how `revalidatePath` interacts with cached layouts
+after Server Action mutations, and how to correctly bind database UUIDs in mapped component lists to
+avoid wrong foreign key writes.
+
+### 2. Prisma Schema & Query Design
+
+Claude was used to design the relational schema (Students → Programmes → Assessments → Submissions)
+and generate type-safe Prisma queries with the correct `include` and `select` shapes for each page's
+data requirements.
+
+### 3. Debugging Stale State & Cache Issues
+
+Claude helped diagnose and fix three recurring issues during development: route 404s after directory
+restructuring (stale `.next` cache), submission counters not updating after mutations (missing
+`revalidatePath`), and file uploads writing to the wrong student record (index-based vs UUID-based
+prop passing in mapped components).
+
+> AI was used as a reasoning and debugging tool. All code was reviewed, understood, and integrated
+> manually.
+
 ---
 
-# AI Debugging Protocols: Fixing Core Architectural Issues
+## Known Limitations
 
-When collaborating with an AI assistant to patch runtime errors or synchronization anomalies, use
-these precise context blueprints to fix the three most common Next.js/Prisma state issues
-immediately.
+- **File storage** — uploads saved to `/public/uploads` (local only, not production-ready; S3/R2
+  recommended)
+- **No authentication** — routes are not protected; middleware only handles redirects
+- **No tests** — no unit or integration test coverage currently
+- **No pagination** — all assessments and submissions are fetched in a single query
 
-### 1. The Route Segment Path Mismatch (404 / Missing Files)
+---
 
-The Problem: Moving or restructuring directory routes inside the app/ folder using a shell terminal
-leaves Next.js background compilation layers looking for stale layout paths, causing active requests
-to drop with 404 tracking codes.
-
-AI Prompt Context Blueprint:
-
-"I just restructured my dynamic folders from app/old-route to app/student/[id]/new-route using the
-terminal. The editor is throwing file-not-found errors on the old path matching \*_/_.tsx. Provide
-the exact terminal sequence to flush the bundler compilation cache and restart the internal
-TypeScript language server framework."
-
-### 2. Stale Relational Counters (UI Count Not Updating)
-
-The Problem: Mutating data with a Server Action saves records to the database perfectly, but parent
-server layouts do not increment arrays (e.g., student.submissions.length) due to Next.js
-aggressively caching the dynamic path wrapper.
-
-AI Prompt Context Blueprint:
-
-"My Prisma action successfully upserts an asset record to the database table, but my server
-dashboard element keeps displaying the stale array length count until I force a browser window
-refresh. Write the cache revalidation strategy using revalidatePath and page-level dynamic export
-overrides to force fresh data reads on every request layout render."
-
-### 3. Loop Iteration Context Drifts (Writing to the Wrong Row ID)
-
-The Problem: In mapped arrays (openAssessments.map), passing ambient context pointers or indexing
-variables causes frontend upload scripts to send a completely different student's database
-identifier key to the server action layer.
-
-AI Prompt Context Blueprint:
-
-## "My multi-tenant assessment mapping loop is executing file uploads successfully, but the foreign key relation is saving against a completely different student record row. Refactor my dynamic page map component to bind strict database UUID values directly to the client prop interface wrapper to ensure isolation."
-
-# Deployment
-
-## Build Production App
+## Production Build
 
 ```bash
 npm run build
-```
-
-## Start Production Server
-
-```bash
 npm run start
 ```
 
----
-
-# Environment Requirements
-
-- Node.js 18+
-- PostgreSQL database
-- Prisma configured correctly
-- Writable uploads directory
+Requires Node.js 18+, a running PostgreSQL instance, and a writable `public/uploads/` directory.
 
 ---
 
-# Learn More
+## License
 
-## Next.js
-
-- https://nextjs.org/docs
-- https://nextjs.org/learn
-
-## Prisma
-
-- https://www.prisma.io/docs
-
-## PostgreSQL
-
-- https://www.postgresql.org/docs/
-
----
-
-# License
-
-This project is intended for academic and internal educational management workflows.
+MIT — intended for academic and internal educational management workflows.
