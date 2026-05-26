@@ -11,7 +11,10 @@ export async function GET(req: Request) {
 			name: { contains: search, mode: "insensitive" },
 			status: status ? (status as any) : undefined,
 		},
-		include: { programme: true },
+		include: {
+			programme: true,
+			grades: true,
+		},
 		orderBy: { createdAt: "desc" },
 	});
 	return NextResponse.json(students);

@@ -42,7 +42,7 @@ export default function StudentDirectoryTable() {
 	}, [search]);
 
 	return (
-		<div className='space-y-4'>
+		<div className='space-y-4 w'>
 			<div className='relative max-w-sm'>
 				<IconSearch className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
 				<Input

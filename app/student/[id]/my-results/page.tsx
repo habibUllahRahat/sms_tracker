@@ -2,16 +2,27 @@ import React from "react";
 import { prisma } from "@/lib/prisma";
 import AcademicReportList from "@/components/AcademicReportList";
 
-export default async function MyResultsPage() {
-	const targetStudent = await prisma.student.findFirst({
+interface PageProps {
+	params: {
+		id: string;
+	};
+}
+
+export default async function MyResultsPage({ params }: PageProps) {
+	const targetStudent = await prisma.student.findUnique({
+		where: {
+			id: params.id,
+		},
 		include: {
 			submissions: true,
 			grades: true,
 		},
 	});
+
 	const assessments = await prisma.assessment.findMany({
 		orderBy: { deadline: "asc" },
 	});
+
 	if (!targetStudent) {
 		return (
 			<div className='p-8 text-center text-muted-foreground'>
@@ -19,6 +30,7 @@ export default async function MyResultsPage() {
 			</div>
 		);
 	}
+
 	const studentData = {
 		submissions: targetStudent.submissions.map((s) => ({
 			id: s.id,
@@ -43,7 +55,7 @@ export default async function MyResultsPage() {
 	}));
 
 	return (
-		<div className='p-8  mx-auto space-y-6'>
+		<div className='p-8 mx-auto space-y-6'>
 			<div>
 				<h1 className='text-3xl font-bold tracking-tight'>Academic Performance Reports</h1>
 				<p className='text-sm text-muted-foreground'>

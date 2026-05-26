@@ -25,6 +25,7 @@ interface FeeWidgetProps {
 }
 
 export default function FeeManagementWidget({ student, onPaymentSuccess }: FeeWidgetProps) {
+	const [studentId, setStudentId] = useState(student?.id || "");
 	const [amount, setAmount] = useState("");
 	const [reference, setReference] = useState("");
 	const [loading, setLoading] = useState(false);
@@ -32,14 +33,20 @@ export default function FeeManagementWidget({ student, onPaymentSuccess }: FeeWi
 	const totalPaid = student.payments.reduce((sum, p) => sum + Number(p.amount), 0);
 	const balanceOwed = Number(student.programme.feeAmount) - totalPaid;
 
+	React.useEffect(() => {
+		if (student?.id) {
+			setStudentId(student.id);
+		}
+	}, [student?.id]);
+
 	const handlePayment = async (e: React.FormEvent) => {
 		e.preventDefault();
-		if (!amount || !reference) return;
+		if (!studentId || !amount || !reference) return;
 		setLoading(true);
 		const res = await fetch("/api/payments", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ amount, reference, studentId: student.id }),
+			body: JSON.stringify({ amount, reference, studentId }),
 		});
 		setLoading(false);
 		if (res.ok) {
@@ -80,8 +87,19 @@ export default function FeeManagementWidget({ student, onPaymentSuccess }: FeeWi
 					<CardTitle className='text-sm font-medium'>Record New Payment</CardTitle>
 				</CardHeader>
 				<CardContent>
-					<form onSubmit={handlePayment} className='flex gap-4 items-end mb-6'>
-						<div className='flex-1 space-y-1'>
+					<form
+						onSubmit={handlePayment}
+						className='flex flex-col sm:flex-row gap-4 items-end mb-6'
+					>
+						<div className='w-full sm:flex-1 space-y-1'>
+							<Input
+								placeholder='Student ID'
+								value={studentId}
+								onChange={(e) => setStudentId(e.target.value)}
+								required
+							/>
+						</div>
+						<div className='w-full sm:flex-1 space-y-1'>
 							<Input
 								type='number'
 								placeholder='Amount'
@@ -90,7 +108,7 @@ export default function FeeManagementWidget({ student, onPaymentSuccess }: FeeWi
 								required
 							/>
 						</div>
-						<div className='flex-1 space-y-1'>
+						<div className='w-full sm:flex-1 space-y-1'>
 							<Input
 								placeholder='Reference (e.g. Bank TxID)'
 								value={reference}
@@ -98,7 +116,7 @@ export default function FeeManagementWidget({ student, onPaymentSuccess }: FeeWi
 								required
 							/>
 						</div>
-						<Button type='submit' disabled={loading}>
+						<Button type='submit' disabled={loading} className='w-full sm:w-auto'>
 							<IconPlus className='h-4 w-4 mr-1' /> Add
 						</Button>
 					</form>
