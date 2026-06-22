@@ -2,6 +2,8 @@ import React from "react";
 import { prisma } from "@/lib/prisma";
 import FeeManagementWidget from "@/components/FeeManagementWidget";
 
+export const dynamic = "force-dynamic";
+
 export default async function RegistryFeesPage() {
 	const referenceStudent = await prisma.student.findFirst({
 		include: {

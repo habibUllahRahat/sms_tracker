@@ -2,6 +2,8 @@ import React from "react";
 import { prisma } from "@/lib/prisma";
 import MarksheetGrid from "@/components/MarksheetGrid";
 
+export const dynamic = "force-dynamic";
+
 export default async function MarksheetPage() {
 	const currentAssessment = await prisma.assessment.findFirst();
 

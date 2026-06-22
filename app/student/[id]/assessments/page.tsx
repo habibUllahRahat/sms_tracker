@@ -9,7 +9,7 @@ type Props = {
 	params: Promise<{ id: string }>;
 };
 
-export default async function StudentAssessmentsPage({ params }: Props): Promise<JSX.Element> {
+export default async function StudentAssessmentsPage({ params }: Props) {
 	const resolvedParams = await params;
 	const targetId = String(resolvedParams.id).trim();
 

@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { IconUsers, IconCreditCard, IconFileText } from "@tabler/icons-react";
 
+export const dynamic = "force-dynamic";
+
 export default async function StaffDashboardPage() {
 	const studentCount = await prisma.student.count();
 	const paymentSum = await prisma.payment.aggregate({ _sum: { amount: true } });

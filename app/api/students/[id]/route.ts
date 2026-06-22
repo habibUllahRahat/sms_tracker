@@ -13,9 +13,9 @@ import { NextRequest, NextResponse } from "next/server";
 // PATCH handler for updating a student by ID
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = params;
+  const { id } = await params;
 
   // Parse request body
   const body = await request.json();

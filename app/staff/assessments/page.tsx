@@ -2,6 +2,8 @@ import React from "react";
 import { prisma } from "@/lib/prisma";
 import AssessmentCreationForm from "@/components/AssessmentCreationForm";
 
+export const dynamic = "force-dynamic";
+
 export default async function StaffAssessmentsManagementPage() {
 	const assessments = await prisma.assessment.findMany({
 		orderBy: { deadline: "desc" },

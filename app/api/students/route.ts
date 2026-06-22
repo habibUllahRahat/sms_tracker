@@ -1,15 +1,26 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import type { EnrollmentStatus } from "@/app/generated/prisma";
+
+const enrollmentStatusValues = [
+	"ENROLLED",
+	"DEFERRED",
+	"WITHDRAWN",
+	"COMPLETED",
+] as const;
 
 export async function GET(req: Request) {
 	const { searchParams } = new URL(req.url);
 	const search = searchParams.get("search") ?? "";
-	const status = searchParams.get("status");
+	const statusParam = searchParams.get("status");
+	const status = statusParam && enrollmentStatusValues.includes(statusParam as EnrollmentStatus)
+		? (statusParam as EnrollmentStatus)
+		: undefined;
 
 	const students = await prisma.student.findMany({
 		where: {
 			name: { contains: search, mode: "insensitive" },
-			status: status ? (status as any) : undefined,
+			status,
 		},
 		include: {
 			programme: true,

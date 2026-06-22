@@ -2,6 +2,8 @@ import React from "react";
 import { prisma } from "@/lib/prisma";
 import AcademicReportList from "@/components/AcademicReportList";
 
+export const dynamic = "force-dynamic";
+
 interface PageProps {
 	params: {
 		id: string;
