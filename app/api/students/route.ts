@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import type { EnrollmentStatus } from "@/app/generated/prisma";
 
 const enrollmentStatusValues = [
@@ -9,7 +9,7 @@ const enrollmentStatusValues = [
 	"COMPLETED",
 ] as const;
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
 	const { searchParams } = new URL(req.url);
 	const search = searchParams.get("search") ?? "";
 	const statusParam = searchParams.get("status");
@@ -31,30 +31,36 @@ export async function GET(req: Request) {
 	return NextResponse.json(students);
 }
 
-export async function POST(req: Request) {
-	try {
-		const body = await req.json();
-		const year = new Date().getFullYear();
-		const lastStudent = await prisma.student.findFirst({
-			where: { studentCode: { startsWith: `SMS-${year}-` } },
-			orderBy: { studentCode: "desc" },
-			select: { studentCode: true },
-		});
-		let nextSequence = 1;
-		if (lastStudent?.studentCode) {
-			const parts = lastStudent.studentCode.split("-");
-			const lastSequenceNumber = parseInt(parts[2], 10);
-			if (!isNaN(lastSequenceNumber)) {
-				nextSequence = lastSequenceNumber + 1;
-			}
-		}
-		const studentCode = `SMS-${year}-${String(nextSequence).padStart(4, "0")}`;
-		const student = await prisma.student.create({
-			data: { ...body, studentCode },
-		});
-		return NextResponse.json(student, { status: 201 });
-	} catch (e: unknown) {
-		const message = e instanceof Error ? e.message : String(e);
-		return NextResponse.json({ error: message }, { status: 400 });
-	}
+// POST handler for creating a student
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const year = new Date().getFullYear();
+
+    const lastStudent = await prisma.student.findFirst({
+      where: { studentCode: { startsWith: `SMS-${year}-` } },
+      orderBy: { studentCode: "desc" },
+      select: { studentCode: true },
+    });
+
+    let nextSequence = 1;
+    if (lastStudent?.studentCode) {
+      const parts = lastStudent.studentCode.split("-");
+      const lastSequenceNumber = parseInt(parts[2], 10);
+      if (!isNaN(lastSequenceNumber)) {
+        nextSequence = lastSequenceNumber + 1;
+      }
+    }
+
+    const studentCode = `SMS-${year}-${String(nextSequence).padStart(4, "0")}`;
+
+    const student = await prisma.student.create({
+      data: { ...body, studentCode },
+    });
+
+    return NextResponse.json(student, { status: 201 });
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : String(e);
+    return NextResponse.json({ error: message }, { status: 400 });
+  }
 }
